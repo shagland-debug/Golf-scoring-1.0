@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Golf Score Tracker</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 10px;
+  background: #f4f4f4;
+}
+
+h1 {
+  text-align: center;
+}
+
+.card {
+  background: white;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th, td {
+  padding: 4px;
+  text-align: center;
+}
+
+input[type="number"] {
+  width: 50px;
+}
+
+button {
+  padding: 10px;
+  width: 100%;
+  margin-top: 10px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: none;
+  background: #2e7d32;
+  color: white;
+}
+
+.stats {
+  font-weight: bold;
+  font-size: 16px;
+}
+</style>
+</head>
+<body>
+
+<h1>Golf Score Tracker</h1>
+
+<div class="card">
+<label>Course: <input type="text" id="course"></label>
+<label>Date: <input type="date" id="date"></label>
+</div>
+
+<div class="card">
+<table>
+<thead>
+<tr>
+<th>Hole</th>
+<th>Par</th>
+<th>Strokes</th>
+<th>Putts</th>
+<th>FIR</th>
+<th>GIR</th>
+<th>Pen</th>
+</tr>
+</thead>
+<tbody id="scoreTable"></tbody>
+</table>
+</div>
+
+<div class="card stats" id="stats"></div>
+
+<button onclick="saveRound()">Save Round</button>
+
+<script>
+const table = document.getElementById("scoreTable");
+
+for (let i = 1; i <= 18; i++) {
+  let row = document.createElement("tr");
+  row.innerHTML = `
+    <td>${i}</td>
+    <td><input type="number" value="4" min="3" max="5"></td>
+    <td><input type="number" min="1"></td>
+    <td><input type="number" min="0"></td>
+    <td><input type="checkbox"></td>
+    <td><input type="checkbox"></td>
+    <td><input type="number" min="0"></td>
+  `;
+  table.appendChild(row);
+}
+
+document.querySelectorAll("input").forEach(input =>
+  input.addEventListener("input", calculateStats)
+);
+
+function calculateStats() {
+  let total = 0;
+  let parTotal = 0;
+  let putts = 0;
+  let fir = 0;
+  let gir = 0;
+  let firOpportunities = 14;
+
+  [...table.rows].forEach(row => {
+    let par = Number(row.cells[1].firstChild.value) || 0;
+    let strokes = Number(row.cells[2].firstChild.value) || 0;
+    let putt = Number(row.cells[3].firstChild.value) || 0;
+    let firBox = row.cells[4].firstChild.checked;
+    let girBox = row.cells[5].firstChild.checked;
+
+    parTotal += par;
+    total += strokes;
+    putts += putt;
+    if (firBox) fir++;
+    if (girBox) gir++;
+  });
+
+  let scoreToPar = total - parTotal;
+  let firPct = ((fir / firOpportunities) * 100).toFixed(0);
+  let girPct = ((gir / 18) * 100).toFixed(0);
+
+  document.getElementById("stats").innerHTML =
+    `Total: ${total} | To Par: ${scoreToPar >= 0 ? "+" : ""}${scoreToPar}
+     <br>Putts: ${putts}
+     <br>FIR: ${firPct}% | GIR: ${girPct}%`;
+}
+
+function saveRound() {
+  let rounds = JSON.parse(localStorage.getItem("golfRounds")) || [];
+  let stats = document.getElementById("stats").innerText;
+  rounds.push({
+    course: document.getElementById("course").value,
+    date: document.getElementById("date").value,
+    stats: stats
+  });
+  localStorage.setItem("golfRounds", JSON.stringify(rounds));
+  alert("Round Saved!");
+}
+
+calculateStats();
+</script>
+
+</body>
+</html>
